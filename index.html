@@ -1994,9 +1994,17 @@
               window.tcpCallbacks[cbId] = resolve;
               window.AndroidTCP.sendPacket(ip, port, packet, false, 5000, cbId);
           });
-          // Mock latency for local packet
           j.sent_bytes = packet.length;
           j.latency_ms = 15;
+          if (j && j.ok) {
+              const logRes = await apiCall('send.php', 'POST', {
+                  ip, port, packet, imei: v.imei, vehicle_id: v.id,
+                  sent_bytes: j.sent_bytes, latency_ms: j.latency_ms, log_only: true
+              });
+              if (logRes && logRes.packet_count !== undefined) {
+                  j.packet_count = logRes.packet_count;
+              }
+          }
       } else {
           j = await apiCall('send.php', 'POST', {
             ip, port, packet,
