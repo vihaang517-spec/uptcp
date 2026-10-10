@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>UP TCP – Control Panel</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════════════════════════
+   APPLE LIQUID GLASS – WHITE / LIGHT MODE
+   Reference: developer.apple.com/design/human-interface-guidelines
+   ══════════════════════════════════════════════════════════ */
+
+    :root {
+      /* Premium Framer Motion Style Glassmorphism */
+      --sys-bg: #f8fafc;
+      --sys-bg2: #ffffff;
+      --sys-label: #0f172a;
+      --sys-label2: #334155;
+      --sys-label3: #64748b;
+      --sys-separator: rgba(0, 0, 0, 0.05);
+      --sys-blue: #3b82f6;
+      --sys-blue-light: #93c5fd;
+      --sys-red: #ef4444;
+      --sys-green: #10b981;
+      --sys-orange: #f59e0b;
+
+      /* Glass Material tokens */
+      --glass-bg: rgba(255, 255, 255, 0.45);
+      --glass-bg-thick: rgba(255, 255, 255, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.8);
+      --glass-border2: rgba(0, 0, 0, 0.03);
+      --glass-shadow: rgba(31, 38, 135, 0.07);
+      --glass-shadow2: rgba(31, 38, 135, 0.03);
+      --glass-blur: blur(32px);
+
+      /* Specular / rim */
+      --rim-top: rgba(255, 255, 255, 0.9);
+      --rim-bottom: rgba(255, 255, 255, 0.15);
+      --iridescent-1: rgba(200, 220, 255, 0.30);
+      --iridescent-2: rgba(255, 200, 230, 0.22);
+      --iridescent-3: rgba(200, 255, 230, 0.18);
+    }
+
+    /* ── Reset ── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      color: var(--sys-label);
+      overflow-x: hidden;
+      background: var(--sys-bg);
+    }
+
+    /* ══ ANIMATED BACKGROUND ══ */
+    .bg-scene {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: linear-gradient(125deg, #e8efff 0%, #ffffff 38%, #fce8ff 68%, #e8fff4 100%);
+    }
+
+    /* Particle canvas fills bg */
+    #particle-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    /* Orbs – morphing liquid glass */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      will-change: transform, border-radius;
+      transform: translateZ(0);
+      filter: blur(0px);
+      mix-blend-mode: normal;
+    }
+    .orb1 {
+      width: 520px; height: 520px;
+      top: -140px; left: -120px;
+      opacity: 0.55;
+      background: radial-gradient(ellipse at 35% 30%, rgba(219,234,254,0.9), rgba(196,221,255,0.4) 55%, transparent);
+      animation: orbMorph1 20s ease-in-out infinite;
+    }
+    .orb2 {
+      width: 380px; height: 380px;
+      bottom: -80px; right: -80px;
+      opacity: 0.55;
+      background: radial-gradient(ellipse at 35% 30%, rgba(254,215,254,0.9), rgba(255,196,235,0.4) 55%, transparent);
+      animation: orbMorph2 17s ease-in-out infinite;
+    }
+    .orb3 {
+      width: 260px; height: 260px;
+      top: 38%; left: 58%;
+      opacity: 0.45;
+      background: radial-gradient(ellipse at 35% 30%, rgba(187,247,208,0.9), rgba(110,231,183,0.3) 55%, transparent);
+      animation: orbMorph3 22s ease-in-out infinite;
+    }
+
+    @keyframes orbMorph1 {
+      0%   { transform: translate(0,0) scale(1);      border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
+      25%  { transform: translate(20px,-30px) scale(1.05); border-radius: 40% 60% 30% 70% / 60% 40% 60% 40%; }
+      50%  { transform: translate(-10px,-20px) scale(0.97); border-radius: 70% 30% 50% 50% / 30% 70% 30% 70%; }
+      75%  { transform: translate(15px,10px) scale(1.03);  border-radius: 50% 50% 40% 60% / 50% 50% 60% 40%; }
+      100% { transform: translate(0,0) scale(1);      border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; }
+    }
+    @keyframes orbMorph2 {
+      0%   { transform: translate(0,0) scale(1);      border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%; }
+      33%  { transform: translate(-25px,20px) scale(1.07); border-radius: 70% 30% 60% 40% / 40% 70% 30% 60%; }
+      66%  { transform: translate(10px,-15px) scale(0.95); border-radius: 30% 70% 50% 50% / 70% 30% 50% 50%; }
+      100% { transform: translate(0,0) scale(1);      border-radius: 40% 60% 30% 70% / 60% 40% 70% 30%; }
+    }
+    @keyframes orbMorph3 {
+      0%   { transform: translate(0,0) scale(1);      border-radius: 50% 50% 60% 40% / 40% 60% 50% 50%; }
+      40%  { transform: translate(-15px,25px) scale(1.1); border-radius: 30% 70% 40% 60% / 60% 30% 70% 40%; }
+      80%  { transform: translate(20px,-10px) scale(0.92); border-radius: 70% 30% 50% 50% / 30% 70% 30% 70%; }
+      100% { transform: translate(0,0) scale(1);      border-radius: 50% 50% 60% 40% / 40% 60% 50% 50%; }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+   LIQUID GLASS MATERIAL  (perf-optimised)
+   ══════════════════════════════════════════════════════════ */
+    .lg {
+      position: relative;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        0 8px 40px var(--glass-shadow),
+        0 2px 12px rgba(31,38,135,0.04),
+        inset 0 1.5px 0 var(--rim-top),
+        inset 0 -1px 0 var(--rim-bottom);
+      overflow: hidden;
+      transform: translateZ(0);
+      contain: layout style paint;
+      transition: box-shadow 0.5s cubic-bezier(0.16,1,0.3,1), transform 0.5s cubic-bezier(0.16,1,0.3,1), border-color 0.4s;
+      will-change: transform, box-shadow;
+    }
+    .lg:hover {
+      box-shadow:
+        0 24px 64px rgba(31,38,135,0.13),
+        0 4px 20px rgba(59,130,246,0.08),
+        inset 0 1.5px 0 rgba(255,255,255,0.95),
+        inset 0 -1px 0 rgba(255,255,255,0.2);
+      border-color: rgba(255,255,255,0.95);
+    }
+
+    /* Single static specular highlight – no animation needed */
+    .lg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(148deg,
+          rgba(255, 255, 255, 0.52) 0%,
+          rgba(255, 255, 255, 0.08) 35%,
+          transparent 60%);
+    }
+
+    /* Iridescent tint – opacity-only animation (compositor path) */
+    .lg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      border-radius: inherit;
+      background: linear-gradient(135deg,
+          rgba(200, 225, 255, 0.20) 0%,
+          transparent 45%,
+          rgba(255, 200, 238, 0.15) 72%,
+          transparent 100%);
+      will-change: opacity;
+      animation: shimmer 8s ease-in-out infinite alternate;
+    }
+
+    /* opacity-only – no layout, no paint, pure compositor */
+    @keyframes shimmer {
+      from {
+        opacity: 0.55;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .lg>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .lg-thick {
+      background: var(--glass-bg-thick);
+    }
+
+    .lg-hover:hover {
+      box-shadow: 0 24px 64px rgba(31,38,135,0.14), inset 0 1.5px 0 var(--rim-top), inset 0 -1px 0 var(--rim-bottom);
+      transform: translateZ(0) translateY(-4px) scale(1.01);
+    }
+
+    /* ══ RIPPLE CLICK EFFECT ══ */
+    .ripple-host { position: relative; overflow: hidden; }
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.45);
+      transform: scale(0);
+      animation: rippleGrow 0.55s cubic-bezier(0.16,1,0.3,1) forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleGrow {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* ══ SHIMMER SKELETON ══ */
+    @keyframes skeletonShimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position: 600px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, rgba(241,245,249,0.6) 25%, rgba(255,255,255,0.9) 50%, rgba(241,245,249,0.6) 75%);
+      background-size: 600px 100%;
+      animation: skeletonShimmer 1.5s infinite;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    /* ══ TABLE ROW STAGGER ══ */
+    @keyframes rowSlideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .anim-row { animation: rowSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) both; }
+
+    /* ══ STATUS DOT PULSE RING ══ */
+    .status-dot.run::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid var(--sys-green);
+      animation: dotPing 1.5s cubic-bezier(0,0,0.2,1) infinite;
+    }
+    .status-dot { position: relative; }
+    @keyframes dotPing {
+      0%   { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* ══ COUNT-UP NUMBER ══ */
+    .countup { display: inline-block; font-variant-numeric: tabular-nums; transition: color 0.4s; }
+
+    /* ══════════════════════════════════════════════════════════
+   TYPOGRAPHY
+   ══════════════════════════════════════════════════════════ */
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--sys-label);
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.018em;
+      color: var(--sys-label);
+    }
+
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--sys-label);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+   SVG FILTERS (hidden)
+   ══════════════════════════════════════════════════════════ */
+    .svg-defs {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+   LOGIN SCREEN
+   ══════════════════════════════════════════════════════════ */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      transition: opacity .4s ease, visibility .4s ease;
+    }
+
+    #login-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 44px 36px 40px;
+      border-radius: 32px;
+      animation: cardIn .5s cubic-bezier(.34, 1.56, .64, 1) both;
+    }
+
+    @keyframes cardIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* SF-style icon badge */
+    .login-badge {
+      width: 68px;
+      height: 68px;
+      margin: 0 auto 22px;
+      border-radius: 20px;
+      background: var(--glass-bg-thick);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow:
+        0 12px 32px rgba(0, 122, 255, 0.18),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 122, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      position: relative;
+    }
+
+    .login-badge::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(145deg, rgba(0, 122, 255, 0.12), transparent 60%);
+      pointer-events: none;
+    }
+
+    .login-card h1 {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 4px;
+    }
+
+    .login-tagline {
+      text-align: center;
+      font-size: 14px;
+      color: var(--sys-label3);
+      margin-bottom: 32px;
+      letter-spacing: -.01em;
+    }
+
+    /* ── Field ── */
+    .field-wrap {
+      margin-bottom: 14px;
+    }
+
+    .field-wrap label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--sys-label3);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 7px;
+    }
+
+    .glass-input {
+      position: relative;
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      outline: 1px solid rgba(0, 0, 0, 0.06);
+      outline-offset: -1px;
+      border-radius: 14px;
+      box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+      transition: border-color .2s, box-shadow .2s, transform .15s;
+      overflow: hidden;
+    }
+
+    .glass-input input {
+      width: 100%;
+      height: 50px;
+      padding: 0 16px;
+      font: 500 15px -apple-system, 'Inter', system-ui, sans-serif;
+      color: var(--sys-label);
+      background: transparent;
+      border: 0;
+      outline: 0;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .glass-input input::placeholder {
+      color: rgba(60, 60, 67, 0.3);
+    }
+
+    .glass-input:focus-within {
+      border-color: rgba(0, 122, 255, 0.4);
+      outline-color: rgba(0, 122, 255, 0.12);
+      box-shadow:
+        0 0 0 4px rgba(0, 122, 255, 0.12),
+        0 2px 8px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.04);
+      transform: scale(1.005);
+    }
+
+    /* top-rim specular on input */
+    .glass-input::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9) 30%, rgba(255, 255, 255, 0.9) 70%, transparent);
+      pointer-events: none;
+    }
+
+    /* ── Login Button ── */
+    .login-btn {
+      width: 100%;
+      height: 50px;
+      margin-top: 20px;
+      position: relative;
+      overflow: hidden;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      font: 600 16px -apple-system, 'Inter', system-ui, sans-serif;
+      letter-spacing: -0.01em;
+      color: #fff;
+      background: linear-gradient(175deg, #3a9eff 0%, #007aff 50%, #0060df 100%);
+      box-shadow:
+        0 4px 16px rgba(0, 122, 255, 0.4),
+        inset 0 1.5px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.12);
+      transition: transform .15s, box-shadow .2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+      animation: btnSheen 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes btnSheen {
+
+      0%,
+      60%,
+      100% {
+        left: -100%
+      }
+
+      40% {
+        left: 140%
+      }
+    }
+
+    .login-btn:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 8px 24px rgba(0, 122, 255, 0.45), inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .login-btn:active {
+      transform: scale(.98);
+    }
+
+    .login-btn:disabled {
+      opacity: .55;
+      pointer-events: none;
+    }
+
+    /* Error */
+    #login-error {
+      margin-top: 14px;
+      padding: 12px 16px;
+      background: rgba(255, 59, 48, 0.08);
+      border: 1px solid rgba(255, 59, 48, 0.22);
+      border-radius: 12px;
+      color: #c41010;
+      font-size: 13.5px;
+      text-align: center;
+      display: none;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    #login-error.show {
+      display: block;
+      animation: shake .35s ease;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      20%,
+      60% {
+        transform: translateX(-5px)
+      }
+
+      40%,
+      80% {
+        transform: translateX(5px)
+      }
+    }
+
+    .login-footer {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--sys-label3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+   MAIN APP
+   ══════════════════════════════════════════════════════════ */
+    #main-app {
+      display: none;
+      position: relative;
+      z-index: 1;
+    }
+
+    #main-app.visible {
+      display: block;
+    }
+
+    /* ══ SPRING ENTRY ANIMATIONS ══ */
+    @keyframes springUp {
+      0%   { opacity: 0; transform: translateY(48px) scale(0.93) rotateX(6deg); }
+      60%  { opacity: 1; }
+      100% { opacity: 1; transform: translateY(0) scale(1) rotateX(0deg); }
+    }
+    @keyframes springLeft {
+      0%   { opacity: 0; transform: translateX(-40px) scale(0.95); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes springRight {
+      0%   { opacity: 0; transform: translateX(40px) scale(0.95); }
+      100% { opacity: 1; transform: translateX(0) scale(1); }
+    }
+    @keyframes springDown {
+      0%   { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeBlur {
+      0%   { opacity: 0; filter: blur(12px) saturate(0); }
+      100% { opacity: 1; filter: blur(0px) saturate(1); }
+    }
+
+    #main-app.visible .topbar    { animation: springDown 0.9s cubic-bezier(0.16,1,0.3,1) both; }
+    #main-app.visible .form-card { animation: springLeft  0.9s cubic-bezier(0.16,1,0.3,1) 0.08s both; }
+    #main-app.visible .status-card { animation: springRight 0.9s cubic-bezier(0.16,1,0.3,1) 0.14s both; }
+    #main-app.visible .db-card   { animation: springUp    0.9s cubic-bezier(0.16,1,0.3,1) 0.22s both; }
+
+    /* ── Top Bar ── */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.62);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8), 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .topbar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .topbar-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(145deg, #60a5fa, #007aff);
+      box-shadow: 0 2px 8px rgba(0, 122, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .topbar h1 {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -.02em;
+    }
+
+    .topbar-logout {
+      height: 34px;
+      padding: 0 16px;
+      background: rgba(255, 59, 48, 0.07);
+      border: 1px solid rgba(255, 59, 48, 0.18);
+      border-radius: 999px;
+      font: 500 13px -apple-system, 'Inter', system-ui, sans-serif;
+      color: var(--sys-red);
+      cursor: pointer;
+      gap: 5px;
+      display: flex;
+      align-items: center;
+      box-shadow: none;
+      transition: background .2s, transform .15s;
+    }
+
+    .topbar-logout:hover {
+      background: rgba(255, 59, 48, 0.14);
+      transform: scale(1.03);
+    }
+
+    .topbar-logout:active {
+      transform: scale(.97);
+    }
+
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 16px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 999px;
+      font: 500 13px -apple-system, 'Inter', system-ui, sans-serif;
+      color: var(--sys-blue);
+      text-decoration: none;
+      transition: background .2s, transform .15s;
+    }
+
+    .topbar-link:hover {
+      background: rgba(59, 130, 246, 0.16);
+      transform: scale(1.03);
+    }
+
+    /* ── App Body ── */
+    .app-body {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 28px 60px;
+    }
+
+    /* ── Section Header ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    /* ── Layout ── */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    @media (min-width: 900px) {
+      .layout-grid {
+        grid-template-columns: 420px 1fr;
+      }
+    }
+    @media (min-width: 1200px) {
+      .layout-grid {
+        grid-template-columns: 460px 1fr;
+      }
+    }
+
+    /* ── Form Card ── */
+    .form-card {
+      padding: 28px;
+    }
+
+    .form-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Floating label field */
+    .fl {
+      position: relative;
+    }
+
+    .fl input {
+      width: 100%;
+      height: 54px;
+      padding: 20px 16px 6px;
+      font: 500 15px -apple-system, 'Inter', system-ui, sans-serif;
+      color: var(--sys-label);
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      outline: 1px solid rgba(0, 0, 0, 0.06);
+      outline-offset: -1px;
+      border-radius: 14px;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color .2s, box-shadow .2s;
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+    }
+
+    .fl label {
+      position: absolute;
+      left: 16px;
+      top: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sys-blue);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      pointer-events: none;
+    }
+
+    .fl input:focus {
+      border-color: rgba(0, 122, 255, 0.5);
+      outline-color: rgba(0, 122, 255, 0.15);
+      box-shadow:
+        0 0 0 6px rgba(0, 122, 255, 0.15),
+        0 4px 12px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      outline: none;
+      transform: scale(1.01);
+    }
+
+    .fl input[readonly] {
+      background: rgba(245, 245, 247, 0.8);
+      color: var(--sys-label3);
+      cursor: not-allowed;
+    }
+
+    /* ── Primary / Destructive Buttons ── */
+    .btn {
+      height: 50px;
+      border: 0;
+      border-radius: 14px;
+      cursor: pointer;
+      font: 600 15px -apple-system, 'Inter', system-ui, sans-serif;
+      letter-spacing: -.01em;
+      color: #fff;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(175deg, rgba(255, 255, 255, 0.35) 0%, transparent 50%);
+    }
+
+    .btn:hover {
+      transform: translateY(-3px) scale(1.02);
+      filter: brightness(1.1);
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+      filter: brightness(0.9);
+    }
+
+    .btn:disabled {
+      opacity: .45;
+      pointer-events: none;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(175deg, #40a8ff 0%, #007aff 55%, #0060df 100%);
+      box-shadow: 0 6px 20px rgba(0, 122, 255, 0.38), inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 10px 28px rgba(0, 122, 255, 0.45), inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-stop {
+      background: linear-gradient(175deg, #ff6b60 0%, #ff3b30 55%, #d42b21 100%);
+      box-shadow: 0 6px 20px rgba(255, 59, 48, 0.32), inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-stop:hover {
+      box-shadow: 0 10px 28px rgba(255, 59, 48, 0.4), inset 0 1.5px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .btns-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    /* ── Status Card ── */
+    .status-card {
+      padding: 24px;
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    /* Last Sent timestamp */
+    .last-sent-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(59,130,246,0.05);
+      border: 1px solid rgba(59,130,246,0.1);
+      border-radius: 12px;
+      font-size: 12.5px;
+      color: var(--sys-label3);
+    }
+    .last-sent-label {
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-size: 10px;
+      color: var(--sys-blue);
+      white-space: nowrap;
+    }
+    #last-sent-time {
+      font: 600 13px 'JetBrains Mono', monospace;
+      color: var(--sys-label2);
+      animation: fadeBlur 0.4s ease both;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.15);
+      transition: background .3s, box-shadow .3s;
+    }
+
+    .status-dot.run {
+      background: var(--sys-green);
+      box-shadow: 0 0 0 5px rgba(52, 199, 89, 0.18);
+    }
+
+    .status-dot.err {
+      background: var(--sys-red);
+      box-shadow: 0 0 0 5px rgba(255, 59, 48, 0.18);
+    }
+
+    .status-dot.sending {
+      background: var(--sys-orange);
+      box-shadow: 0 0 0 5px rgba(255, 149, 0, 0.18);
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.18);
+      }
+
+      50% {
+        box-shadow: 0 0 0 8px rgba(255, 149, 0, 0.08);
+      }
+    }
+
+    #msg {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--sys-label2);
+      word-break: break-word;
+    }
+
+    #pkt {
+      margin-top: 14px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      font: 12px 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+      color: var(--sys-label3);
+      word-break: break-all;
+      max-height: 120px;
+      overflow-y: auto;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    #pkt:empty::after {
+      content: 'Packet preview will appear here…';
+      color: rgba(0, 0, 0, 0.2);
+      font-style: italic;
+    }
+
+    /* ── DB Card ── */
+    .db-card {
+      padding: 24px;
+    }
+
+    /* Pill Buttons */
+    .pill {
+      height: 30px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      font: 600 12px -apple-system, 'Inter', system-ui, sans-serif;
+      transition: transform .12s, box-shadow .2s;
+      display: inline-flex;
+      align-items: center;
+      box-shadow: none;
+      color: #fff;
+    }
+
+    .pill:hover {
+      transform: scale(1.04);
+    }
+
+    .pill:active {
+      transform: scale(.97);
+    }
+
+    .pill:disabled {
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    .pill-blue {
+      background: var(--sys-blue);
+      box-shadow: 0 3px 10px rgba(0, 122, 255, 0.28);
+    }
+
+    .pill-gray {
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--sys-label2);
+      border: 1px solid rgba(0, 0, 0, 0.07);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .pill-gray:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .pill-red {
+      background: rgba(255, 59, 48, 0.1);
+      color: var(--sys-red);
+      border: 1px solid rgba(255, 59, 48, 0.18);
+    }
+
+    .pill-red:hover {
+      background: rgba(255, 59, 48, 0.18);
+    }
+
+    .pill-teal {
+      background: rgba(0, 122, 255, 0.08);
+      color: var(--sys-blue);
+      border: 1px solid rgba(0, 122, 255, 0.18);
+    }
+
+    .pill-teal:hover {
+      background: rgba(0, 122, 255, 0.15);
+    }
+
+    /* Table */
+    .table-shell {
+      border-radius: 16px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    th {
+      background: rgba(245, 245, 247, 0.8);
+      color: var(--sys-label3);
+      font: 600 11px -apple-system, 'Inter', system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 11px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      color: var(--sys-label);
+      white-space: nowrap;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(0, 122, 255, 0.04);
+      cursor: pointer;
+    }
+
+    tr.selected-row td {
+      background: rgba(0, 122, 255, 0.07);
+    }
+
+    .badge-cnt {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 22px;
+      padding: 0 10px;
+      background: rgba(52, 199, 89, 0.12);
+      border: 1px solid rgba(52, 199, 89, 0.25);
+      border-radius: 999px;
+      color: #1a7a35;
+      font: 600 11.5px 'JetBrains Mono', monospace;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 8000;
+      background: rgba(0, 0, 0, 0.12);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 400px;
+      padding: 28px;
+      border-radius: 28px;
+      animation: cardIn .3s cubic-bezier(.34, 1.56, .64, 1) both;
+    }
+
+    .modal-title {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    /* ── Kicked Banner ── */
+    #kicked-banner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      background: rgba(255, 59, 48, 0.9);
+      backdrop-filter: blur(16px);
+      color: #fff;
+      text-align: center;
+      padding: 14px 20px;
+      font: 500 14px -apple-system, 'Inter', system-ui, sans-serif;
+      box-shadow: 0 4px 20px rgba(255, 59, 48, 0.3);
+    }
+
+    #kicked-banner a {
+      color: #ffe5e5;
+      font-weight: 700;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+   MAINTENANCE MODE SCREEN
+   ══════════════════════════════════════════════════════════ */
+    #maintenance-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: linear-gradient(145deg, #fff7f0 0%, #fff0f5 40%, #f0f5ff 100%);
+      transition: opacity .4s ease, visibility .4s ease;
+    }
+
+    #maintenance-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .maint-card {
+      width: 100%;
+      max-width: 520px;
+      padding: 56px 44px 52px;
+      border-radius: 36px;
+      text-align: center;
+      animation: cardIn .5s cubic-bezier(.34, 1.56, .64, 1) both;
+    }
+
+    .maint-icon {
+      font-size: 72px;
+      margin-bottom: 24px;
+      display: block;
+      animation: maintFloat 3s ease-in-out infinite;
+    }
+
+    @keyframes maintFloat {
+
+      0%,
+      100% {
+        transform: translateY(0px);
+      }
+
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    .maint-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -.03em;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .maint-subtitle {
+      font-size: 16px;
+      color: var(--sys-label3);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .maint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: rgba(255, 107, 53, 0.1);
+      border: 1px solid rgba(255, 107, 53, 0.25);
+      color: #c44a00;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .maint-badge span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ff6b35;
+      display: inline-block;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    /* (Maintenance toggle removed — controlled via MAINTENANCE_MODE const in JS) */
+
+    /* ── Topbar nav links ── */
+    .topbar-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-link {
+      height: 34px;
+      padding: 0 16px;
+      background: rgba(0, 122, 255, 0.07);
+      border: 1px solid rgba(0, 122, 255, 0.18);
+      border-radius: 999px;
+      font: 500 13px -apple-system, 'Inter', system-ui, sans-serif;
+      color: var(--sys-blue);
+      cursor: pointer;
+      gap: 5px;
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      transition: background .2s, transform .15s;
+    }
+
+    .topbar-link:hover {
+      background: rgba(0, 122, 255, 0.14);
+      transform: scale(1.03);
+    }
+
+    /* ── IMEI auto-add toast ── */
+    #imei-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 8500;
+      padding: 14px 20px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      font: 500 13.5px -apple-system, 'Inter', system-ui, sans-serif;
+      color: var(--sys-label);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: transform .3s cubic-bezier(.34, 1.56, .64, 1), opacity .3s;
+      pointer-events: none;
+      max-width: 320px;
+    }
+
+    #imei-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    #imei-toast .toast-icon {
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Animated background ── -->
+  <div class="bg-scene">
+    <canvas id="particle-canvas"></canvas>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="orb orb3"></div>
+  </div>
+
+  <!-- ════════════ MAINTENANCE SCREEN ════════════ -->
+  <div id="maintenance-screen" class="hidden">
+    <div class="maint-card lg lg-thick">
+      <span class="maint-icon">🔧</span>
+      <h1 class="maint-title">Under Maintenance</h1>
+      <p class="maint-subtitle">The UP TCP Control Panel is currently undergoing scheduled maintenance.<br>Please check
+        back shortly.</p>
+      <div class="maint-badge">
+        <span></span> Maintenance in progress
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ KICKED BANNER ════════════ -->
+  <div id="kicked-banner">
+    ⚠️ You were signed out — another session logged in. <a href="#" onclick="showLogin(); return false;">Sign in
+      again</a>
+  </div>
+
+  <!-- ════════════ LOGIN SCREEN ════════════ -->
+  <div id="login-screen">
+    <div class="login-card lg lg-thick">
+      <div class="login-badge">🛰️</div>
+      <h1>UP TCP Client</h1>
+      <p class="login-tagline">Sign in to access the control panel</p>
+
+      <form id="login-form" autocomplete="on">
+        <div class="field-wrap">
+          <label for="login-user">Username</label>
+          <div class="glass-input">
+            <input id="login-user" type="text" name="username" autocomplete="username" placeholder="Enter username"
+              required>
+          </div>
+        </div>
+        <div class="field-wrap">
+          <label for="login-pass">Password</label>
+          <div class="glass-input">
+            <input id="login-pass" type="password" name="password" autocomplete="current-password"
+              placeholder="Enter password" required>
+          </div>
+        </div>
+        <button type="submit" id="login-btn" class="login-btn">🔐 Sign In</button>
+        <div id="login-error" role="alert"></div>
+      </form>
+
+      <p class="login-footer">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <rect x="3" y="5.5" width="7" height="5.5" rx="1" stroke="currentColor" stroke-width="1.2" />
+          <path d="M4.5 5.5V3.5a2 2 0 0 1 4 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+        </svg>
+        Single-session security enabled
+      </p>
+    </div>
+  </div>
+
+  <!-- ════════════ MAIN APP ════════════ -->
+  <div id="main-app">
+
+    <!-- Navigation Bar -->
+    <nav class="topbar">
+      <div class="topbar-logo">
+        <div class="topbar-icon">🛰️</div>
+        <h1>TCP Continuous Client</h1>
+      </div>
+      <div class="topbar-nav">
+        <!-- Logs Button (Visible to both Client & Admin) -->
+        <a href="logs.html" class="topbar-link" id="logs-btn" target="_blank">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.2" />
+            <path d="M3.5 4.5h6M3.5 6.5h6M3.5 8.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+          Logs
+        </a>
+        <!-- Logout -->
+        <button class="topbar-logout" id="logout-btn" onclick="doLogout()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M5 2H2a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h3M9 9l3-3-3-3M12 6.5H5" stroke="currentColor"
+              stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Logout
+        </button>
+      </div>
+    </nav>
+
+    <div class="app-body">
+      <div class="layout-grid">
+
+        <!-- ── Left: Form Card ── -->
+        <div class="lg lg-thick form-card">
+          <div class="form-stack">
+
+            <div class="fl">
+              <input id="imei" inputmode="numeric" maxlength="15" value="869742088976045" autocomplete="off" placeholder="Enter or paste 15-digit IMEI">
+              <label for="imei">IMEI</label>
+            </div>
+
+            <!-- Default Vehicle No 0000 (hidden) -->
+            <input type="hidden" id="veh" value="0000">
+
+            <!-- Fixed Hidden Defaults -->
+            <input type="hidden" id="lat" value="24.57649030">
+            <input type="hidden" id="lon" value="84.95734820">
+            <input type="hidden" id="ip" value="154.210.168.75">
+            <input type="hidden" id="port" value="4002">
+
+            <div class="btns-row">
+              <button id="start" class="btn btn-primary">▶ Start Loop</button>
+              <button id="stop" class="btn btn-stop" disabled>■ Stop</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Right: Status + DB ── -->
+        <div style="display:grid; gap:20px; align-content:start;">
+
+          <!-- Status Card -->
+          <div class="lg status-card">
+            <div class="status-header">
+              <div class="status-dot" id="dot"></div>
+              <h3>Transmission Status</h3>
+            </div>
+            <div id="msg">Ready — press Start Loop to begin</div>
+            <div id="pkt" style="display:none;"></div>
+            <div class="last-sent-row" id="last-sent-row" style="display:none;">
+              <span class="last-sent-label">Last Sent</span>
+              <span id="last-sent-time">—</span>
+            </div>
+          </div>
+
+          <!-- Vehicle Database -->
+          <div class="lg db-card">
+            <div class="section-header">
+              <h2>Vehicle Database</h2>
+              <button class="pill pill-blue" id="add-veh-btn">+ Add Record</button>
+            </div>
+
+            <div class="table-shell">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>IMEI</th>
+                    <th>Packets</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="veh-table">
+                  <tr>
+                    <td colspan="4" style="text-align:center; padding:20px; color:var(--sys-label3);">Loading…</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── IMEI Toast Notification ── -->
+  <div id="imei-toast">
+    <span class="toast-icon">✅</span>
+    <span id="imei-toast-msg">IMEI added to database</span>
+  </div>
+
+  <!-- ── Modal: Add / Edit Vehicle ── -->
+  <div class="modal-overlay" id="modal-bg">
+    <div class="modal-card lg lg-thick">
+      <h3 class="modal-title" id="modal-title">Add Vehicle</h3>
+      <form id="veh-form" style="display:grid; gap:14px;">
+        <input type="hidden" id="modal-id">
+        <input type="hidden" id="modal-veh" value="0000">
+        <div class="fl"><input id="modal-imei" maxlength="15" placeholder=" " required><label for="modal-imei">IMEI (15
+            Digits)</label></div>
+        <input type="hidden" id="modal-lat" value="24.57649030">
+        <input type="hidden" id="modal-lon" value="84.95734820">
+        <div class="modal-actions">
+          <button type="button" class="pill pill-gray" id="modal-cancel">Cancel</button>
+          <button type="submit" class="pill pill-blue">Save Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* ─────────── CONFIG ─────────── */
+    const INTERVAL_SEC = 10;
+    const TEMPLATE = "$DP,TNOWTN,2.0.4,NR,01,L,{IMEI},0000,1,{DATE},{TIME},{LAT},{NS},{LON},{EW},0.0,207.78,45,265.5,0.60,0.40,airtel,0,1,25.6,4.0,0,C,29,404,97,06BC,3014,31,06BC,8E3C,31,06BC,8E1E,31,06BC,6E01,31,06BC,585A,0000,00,0,85091.887,0,0,{SEQ},(),{CRC}*";
+    const AUTH_POLL_INTERVAL = 15000;
+    const ADMIN_SERVER_URL = 'https://orbitgps.in/tcp/admin_server.php';
+
+    // ──────────────────────────────────────────────
+    // MAINTENANCE MODE  ← change this to enable/disable
+    // Set to: true  → show maintenance screen to everyone
+    //         false → run normally
+    const MAINTENANCE_MODE = false;
+    // ──────────────────────────────────────────────
+
+    const q = s => document.querySelector(s);
+    let running = false, timer = null, seq = 0, sentTotal = 0, tok = '';
+    let vehicles = [], selectedVehId = null, authPollTimer = null;
+    let imeiToastTimer = null;
+
+    /* ─────────── CRC32 ─────────── */
+    const T = [...Array(256)].map((_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; return c >>> 0 });
+    const crc32 = s => { let c = -1; for (let i = 0; i < s.length; i++) c = T[(c ^ s.charCodeAt(i)) & 255] ^ (c >>> 8); return ((c ^ -1) >>> 0).toString(16).toUpperCase().padStart(8, '0') };
+
+    /* ─────────── MAINTENANCE MODE (Direct Central Admin Sync + Local Fallback) ─────────── */
+    async function applyMaintenanceMode() {
+      try {
+        let isMaint = false;
+
+        // 1. Direct check to Central Admin Server (works seamlessly on GitHub Pages & static hosting)
+        try {
+          const adminRes = await fetch(ADMIN_SERVER_URL + '?action=maintenance', {
+            method: 'GET',
+            cache: 'no-store'
+          });
+          if (adminRes.ok) {
+            const adminData = await adminRes.json();
+            if (adminData && adminData.ok && adminData.maintenance) {
+              isMaint = true;
+            }
+          }
+        } catch (_) {}
+
+        // 2. Also check local/backend send.php (if available and not already triggered)
+        if (!isMaint) {
+          try {
+            const res = await fetch('send.php?action=maintenance', { cache: 'no-store' });
+            if (res.ok) {
+              const d = await res.json();
+              if (d && d.ok && d.maintenance) {
+                isMaint = true;
+              }
+            }
+          } catch (_) {}
+        }
+
+        const ms = document.getElementById('maintenance-screen');
+        const mainApp = document.getElementById('main-app');
+        const loginScreen = document.getElementById('login-screen');
+
+        if (isMaint) {
+          stopRunning();
+          ms.classList.remove('hidden');
+          mainApp.classList.remove('visible');
+          loginScreen.classList.add('hidden');
+        } else {
+          // If maintenance mode was active and just got turned off, restore previous screen
+          if (!ms.classList.contains('hidden')) {
+            ms.classList.add('hidden');
+            const isLoggedIn = sessionStorage.getItem('uptcp_logged_in') === '1';
+            if (isLoggedIn) {
+              mainApp.classList.add('visible');
+            } else {
+              loginScreen.classList.remove('hidden');
+            }
+          }
+        }
+        return isMaint;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // Continuous background maintenance poll (every 5 seconds) so changes made in admin panel reflect immediately on GitHub / client
+    setInterval(async () => {
+      await applyMaintenanceMode();
+    }, 5000);
+
+    /* ─────────── TOAST ─────────── */
+    function showToast(msg, icon = '✅') {
+      const t = document.getElementById('imei-toast');
+      document.getElementById('imei-toast-msg').textContent = msg;
+      t.querySelector('.toast-icon').textContent = icon;
+      t.classList.add('show');
+      clearTimeout(imeiToastTimer);
+      imeiToastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+    }
+
+    /* ─────────── AUTH UI ─────────── */
+    function showLogin() {
+      sessionStorage.removeItem('uptcp_logged_in');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('main-app').classList.remove('visible');
+      const logsBtn = document.getElementById('logs-btn');
+      if (logsBtn) logsBtn.style.display = 'none';
+      stopRunning(); stopAuthPoll();
+    }
+    async function showApp(isAdmin = false) {
+      sessionStorage.setItem('uptcp_logged_in', '1');
+      const isMaint = await applyMaintenanceMode();
+      if (isMaint) return;
+
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('main-app').classList.add('visible');
+      const logsBtn = document.getElementById('logs-btn');
+      if (logsBtn) logsBtn.style.display = 'inline-flex';
+      startAuthPoll();
+    }
+
+    /* Login */
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = q('#login-btn');
+      const errEl = q('#login-error');
+      errEl.classList.remove('show');
+      btn.disabled = true; btn.textContent = 'Signing in…';
+
+      try {
+        const res = await fetch('send.php?action=login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: q('#login-user').value.trim(),
+            password: q('#login-pass').value.trim()
+          })
+        });
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch (_) {
+          const cleanText = text.replace(/<[^>]+>/g, '').trim();
+          throw new Error(cleanText ? 'Server Error: ' + cleanText.slice(0, 120) : 'Invalid response from server');
+        }
+        if (data.ok) {
+          tok = data.csrf || '';
+          document.getElementById('kicked-banner').style.display = 'none';
+          await showApp(!!data.is_admin);
+          await loadVehicles();
+        } else {
+          errEl.textContent = data.error || 'Login failed. Try again.';
+          errEl.classList.add('show');
+        }
+      } catch (err) {
+        // Fallback for static GitHub Pages hosting to authenticate against live Central Admin Server
+        try {
+          const u = q('#login-user').value.trim();
+          const p = q('#login-pass').value.trim();
+          const adminAuthRes = await fetch(ADMIN_SERVER_URL + '?action=verify_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+          });
+          const adminAuthData = await adminAuthRes.json();
+          if (adminAuthData && adminAuthData.ok) {
+            sessionStorage.setItem('uptcp_logged_in', '1');
+            sessionStorage.setItem('uptcp_username', u);
+            document.getElementById('kicked-banner').style.display = 'none';
+            await showApp(!!adminAuthData.is_admin);
+            btn.disabled = false; btn.innerHTML = '🔐 Sign In';
+            return;
+          } else if (adminAuthData && adminAuthData.error) {
+            errEl.textContent = adminAuthData.error;
+            errEl.classList.add('show');
+            btn.disabled = false; btn.innerHTML = '🔐 Sign In';
+            return;
+          }
+        } catch (_) {}
+
+        errEl.textContent = err.message || 'Network error. Check your connection.';
+        errEl.classList.add('show');
+      }
+      btn.disabled = false; btn.innerHTML = '🔐 Sign In';
+    });
+
+    /* Logout */
+    async function doLogout() {
+      stopRunning(); stopAuthPoll();
+      try { await fetch('send.php?action=logout'); } catch (_) { }
+      showLogin();
+    }
+
+    /* Auto-logout on idle (10 minutes) */
+    let idleTime = 0;
+    const IDLE_LIMIT = 10 * 60; // 10 minutes in seconds
+    const resetIdle = () => { idleTime = 0; };
+    
+    // Reset on interaction
+    ['mousemove', 'mousedown', 'keypress', 'touchstart', 'scroll'].forEach(evt => 
+      document.addEventListener(evt, resetIdle, {passive: true})
+    );
+    
+    setInterval(() => {
+      if (document.getElementById('main-app').classList.contains('visible')) {
+        idleTime++;
+        if (idleTime >= IDLE_LIMIT) {
+          doLogout();
+        }
+      }
+    }, 1000);
+
+    /* Session poll & Maintenance poll */
+    function startAuthPoll() {
+      stopAuthPoll();
+      authPollTimer = setInterval(async () => {
+        try {
+          const isMaint = await applyMaintenanceMode();
+          if (isMaint) return;
+
+          const res = await fetch('send.php?action=check_auth');
+          const d = await res.json();
+          if (!d.ok) { 
+            stopRunning(); 
+            document.getElementById('kicked-banner').style.display = 'block'; 
+            showLogin(); 
+          } else {
+            const logsBtn = document.getElementById('logs-btn');
+            if (logsBtn) logsBtn.style.display = 'inline-flex';
+          }
+        } catch (_) { }
+      }, AUTH_POLL_INTERVAL);
+    }
+    function stopAuthPoll() { if (authPollTimer) { clearInterval(authPollTimer); authPollTimer = null; } }
+
+    function stopRunning() {
+      running = false; clearTimeout(timer);
+      const s = q('#start'), p = q('#stop');
+      if (s) s.disabled = false;
+      if (p) p.disabled = true;
+    }
+
+    /* On page load */
+    (async () => {
+      const isMaint = await applyMaintenanceMode();
+      if (isMaint) return;
+
+      try {
+        const res = await fetch('send.php?action=check_auth');
+        const d = await res.json();
+        if (d.ok) {
+          const tokRes = await fetch('send.php?action=token');
+          const tokData = await tokRes.json();
+          if (tokData && tokData.csrf) tok = tokData.csrf;
+          await showApp(!!d.is_admin);
+          await loadVehicles();
+        }
+      } catch (_) { }
+    })();
+
+    /* ─────────── STATUS UI ─────────── */
+    function status(text, state) {
+      q('#msg').textContent = text;
+      q('#dot').className = 'status-dot ' + (state || '');
+    }
+
+    /* Paste lat,lon */
+    q('#lat').addEventListener('input', e => {
+      const m = e.target.value.match(/^\s*(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)\s*$/);
+      if (m) { e.target.value = m[1]; q('#lon').value = m[2]; }
+    });
+
+    /* ─────────── AUTO-ADD IMEI ON INPUT OR PASTE ─────────── */
+    let imeiAutoTimer = null;
+    async function handleImeiAutoAdd() {
+      const imei = q('#imei').value.trim();
+      if (!/^\d{15}$/.test(imei)) return; // act on 15-digit IMEI
+      try {
+        const res = await apiCall('send.php?action=imei_auto_add', 'POST', {
+          imei,
+          lat: 24.57649030,
+          lon: 84.95734820
+        });
+        if (res && res.ok) {
+          if (res.added) {
+            showToast(`IMEI ${imei} added to database ✔`, '✅');
+            vehicles = res.vehicles || vehicles;
+            renderVehicles();
+          }
+          const match = (res.vehicles || vehicles).find(v => v.imei === imei);
+          if (match) { selectedVehId = match.id; renderVehicles(); }
+        }
+      } catch (_) { }
+    }
+
+    q('#imei').addEventListener('paste', () => setTimeout(handleImeiAutoAdd, 50));
+    q('#imei').addEventListener('input', () => {
+      clearTimeout(imeiAutoTimer);
+      imeiAutoTimer = setTimeout(handleImeiAutoAdd, 300);
+    });
+
+    /* ─────────── API ─────────── */
+    async function apiCall(url, method = 'GET', body = null) {
+      try {
+        const opts = { method, headers: { 'X-CSRF-Token': tok } };
+        if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+        const r = await fetch(url, opts);
+        if (r.status === 401) {
+          stopRunning(); document.getElementById('kicked-banner').style.display = 'block'; showLogin();
+          return { ok: false, error: 'Session expired.' };
+        }
+        const text = await r.text();
+        try {
+          return JSON.parse(text);
+        } catch (_) {
+          const cleanText = text.replace(/<[^>]+>/g, '').trim();
+          return { ok: false, error: cleanText ? 'Server Error: ' + cleanText.slice(0, 120) : 'Invalid response from server' };
+        }
+      } catch (e) { return { ok: false, error: e.message || 'Network error' }; }
+    }
+
+    async function getTok() {
+      const d = await apiCall('send.php?action=token');
+      if (d && d.csrf) tok = d.csrf;
+      await loadVehicles();
+    }
+
+    async function loadVehicles() {
+      const d = await apiCall('send.php?action=vehicles');
+      if (d && d.ok && Array.isArray(d.vehicles)) { vehicles = d.vehicles; renderVehicles(); }
+    }
+
+    function renderVehicles() {
+      const tbody = q('#veh-table');
+      if (!vehicles.length) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--sys-label3);">No vehicles — add one above</td></tr>';
+        return;
+      }
+      let html = '';
+      vehicles.forEach(v => {
+        const sel = selectedVehId === v.id;
+        html += `<tr class="${sel ? 'selected-row' : ''}" onclick="selectVehicle(${v.id})">
+      <td>${v.serial_no}</td>
+      <td><code style="font-family:'JetBrains Mono',monospace;font-size:12px;">${v.imei}</code></td>
+      <td><span class="badge-cnt">${v.packet_count || 0}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="pill pill-teal" onclick="event.stopPropagation();selectVehicle(${v.id})">Select</button>
+          <button class="pill pill-gray" onclick="event.stopPropagation();editVehicle(${v.id})">Edit</button>
+          <button class="pill pill-red" onclick="event.stopPropagation();deleteVehicle(${v.id})">Delete</button>
+        </div>
+      </td>
+    </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    window.selectVehicle = function (id) {
+      selectedVehId = id;
+      const v = vehicles.find(x => x.id === id);
+      if (v) { q('#imei').value = v.imei; q('#veh').value = '0000'; if (v.lat) q('#lat').value = v.lat; if (v.lon) q('#lon').value = v.lon; }
+      renderVehicles();
+    };
+
+    /* ─────────── PACKET ─────────── */
+    function buildPacketForVehicle(v) {
+      seq++;
+      const d = new Date(), z = n => String(n).padStart(2, '0');
+      const lat = parseFloat(v.lat || 24.57649030);
+      const lon = parseFloat(v.lon || 84.95734820);
+      const vals = {
+        IMEI: v.imei || q('#imei').value.trim(), VEH: '0000',
+        DATE: z(d.getUTCDate()) + z(d.getUTCMonth() + 1) + d.getUTCFullYear(),
+        TIME: z(d.getUTCHours()) + z(d.getUTCMinutes()) + z(d.getUTCSeconds()),
+        LAT: Math.abs(lat).toFixed(8), NS: lat < 0 ? 'S' : 'N',
+        LON: Math.abs(lon).toFixed(8), EW: lon < 0 ? 'W' : 'E',
+        SEQ: String(seq).padStart(6, '0')
+      };
+      let p = TEMPLATE;
+      for (const k in vals) p = p.replace('{' + k + '}', vals[k]);
+      const body = p.slice(0, p.indexOf('{CRC}'));
+      return p.replace('{CRC}', crc32(body));
+    }
+
+    /* ─────────── SEND LOOP ─────────── */
+    // Returns the single vehicle to send based on current IMEI input
+    function getActiveVehicle() {
+      const manualImei = q('#imei').value.trim();
+      if (!manualImei) return null;
+
+      const match = vehicles.find(x => x.imei === manualImei);
+      if (match) {
+        selectedVehId = match.id;
+        return match;
+      }
+      return {
+        id: 0,
+        imei: manualImei,
+        lat: 24.57649030,
+        lon: 84.95734820
+      };
+    }
+
+    async function sendCycle() {
+      const ip = q('#ip').value.trim(), port = +q('#port').value;
+      if (!ip || !port) { status('Specify valid IP and Port.', 'err'); return; }
+
+      const v = getActiveVehicle();
+      if (!v) { status('No vehicle selected. Select one from the table or enter an IMEI.', 'err'); return; }
+
+      const packet = buildPacketForVehicle(v);
+      q('#pkt').textContent = packet;
+      status(`Sending packet for IMEI ${v.imei}…`, 'sending');
+
+      const j = await apiCall('send.php', 'POST', {
+        ip, port, packet,
+        imei: v.imei,
+        vehicle_id: v.id,
+        append_crlf: false,
+        wait_reply: true,
+        timeout: 5
+      });
+
+      if (j && j.ok) {
+        sentTotal++;
+        // Update count locally – avoid full table re-render on every cycle
+        if (j.packet_count !== undefined && v.id > 0) {
+          const vInList = vehicles.find(x => x.id === v.id);
+          if (vInList) {
+            vInList.packet_count = j.packet_count;
+            // Only update the specific badge cell, not the whole table
+            const badge = document.querySelector(`#veh-table tr.selected-row .badge-cnt`);
+            if (badge) badge.textContent = j.packet_count;
+          }
+        }
+        const replyStr = j.reply ? `  ·  Reply: ${j.reply}` : '';
+        status(`✔ IMEI ${v.imei}  ·  ${j.sent_bytes}B  ·  ${j.latency_ms}ms${replyStr}`, 'run');
+      } else {
+        status(`✘ Failed for IMEI ${v.imei}: ` + (j.error || 'error'), 'err');
+      }
+    }
+
+    async function loop() { if (!running) return; await sendCycle(); if (running) timer = setTimeout(loop, INTERVAL_SEC * 1000); }
+
+    q('#start').onclick = async () => {
+      const v = getActiveVehicle();
+      if (!v) {
+        status('No vehicle selected. Select one from the table or enter an IMEI first.', 'err');
+        return;
+      }
+      running = true; sentTotal = 0; seq = 0;
+      q('#start').disabled = true; q('#stop').disabled = false;
+      status(`Starting loop for IMEI ${v.imei}…`, 'run');
+      if (!tok) await getTok();
+      loop();
+    };
+    q('#stop').onclick = () => {
+      running = false; clearTimeout(timer);
+      q('#start').disabled = false; q('#stop').disabled = true;
+      status('Loop stopped.', '');
+    };
+
+    /* ─────────── MODAL / CRUD ─────────── */
+    const modalBg = q('#modal-bg');
+
+    q('#add-veh-btn').onclick = () => {
+      q('#modal-title').textContent = 'Add Vehicle Record';
+      q('#modal-id').value = ''; q('#modal-veh').value = '0000'; q('#modal-imei').value = '';
+      q('#modal-lat').value = q('#lat').value || '30.00982350';
+      q('#modal-lon').value = q('#lon').value || '77.57197480';
+      modalBg.classList.add('open');
+    };
+    window.editVehicle = function (id) {
+      const v = vehicles.find(x => x.id === id); if (!v) return;
+      q('#modal-title').textContent = 'Edit Vehicle Record';
+      q('#modal-id').value = v.id; q('#modal-veh').value = '0000'; q('#modal-imei').value = v.imei;
+      q('#modal-lat').value = v.lat || '30.00982350'; q('#modal-lon').value = v.lon || '77.57197480';
+      modalBg.classList.add('open');
+    };
+    q('#modal-cancel').onclick = () => modalBg.classList.remove('open');
+
+    q('#veh-form').onsubmit = async e => {
+      e.preventDefault();
+      const id = q('#modal-id').value;
+      const imei = q('#modal-imei').value.trim();
+      const lat = parseFloat(q('#modal-lat').value) || 30.00982350;
+      const lon = parseFloat(q('#modal-lon').value) || 77.57197480;
+      if (!/^\d{15}$/.test(imei)) { alert('IMEI must be exactly 15 digits.'); return; }
+      let res;
+      if (id) { res = await apiCall('send.php?action=vehicle_edit', 'POST', { id: +id, vehicle_no: '0000', imei, lat, lon }); }
+      else { res = await apiCall('send.php?action=vehicle_add', 'POST', { vehicle_no: '0000', imei, lat, lon }); }
+      if (res && res.ok) { modalBg.classList.remove('open'); await loadVehicles(); }
+      else { alert(res.error || 'Failed to save'); }
+    };
+
+    window.deleteVehicle = async function (id) {
+      const v = vehicles.find(x => x.id === id);
+      if (!v || !confirm(`Delete IMEI ${v.imei}?`)) return;
+      const res = await apiCall('send.php?action=vehicle_delete', 'POST', { id });
+      if (res && res.ok) await loadVehicles();
+    };
+
+    /* ═══════════════════════════════════════════
+       ANIMATION ENGINE  – runs after page loads
+    ═══════════════════════════════════════════ */
+
+    // ── 2. PARTICLE CANVAS ────────────────────
+    (function initParticles() {
+      const canvas = document.getElementById('particle-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let W, H, particles = [], animId;
+
+      function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const COLORS = ['rgba(147,197,253,0.55)', 'rgba(196,181,253,0.45)', 'rgba(167,243,208,0.45)', 'rgba(253,186,116,0.35)'];
+
+      function rand(a, b) { return a + Math.random() * (b - a); }
+      function mkParticle() {
+        return {
+          x: rand(0, W), y: rand(0, H),
+          r: rand(1.5, 4),
+          vx: rand(-0.25, 0.25),
+          vy: rand(-0.35, -0.1),
+          alpha: rand(0.3, 0.8),
+          color: COLORS[Math.floor(Math.random() * COLORS.length)]
+        };
+      }
+      for (let i = 0; i < 55; i++) particles.push(mkParticle());
+
+      function drawFrame() {
+        ctx.clearRect(0, 0, W, H);
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.alpha;
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.y < -8 || p.x < -8 || p.x > W + 8) Object.assign(p, mkParticle(), { x: rand(0, W), y: H + 8 });
+        });
+        animId = requestAnimationFrame(drawFrame);
+      }
+      drawFrame();
+    })();
+
+    // ── 3. RIPPLE ON BUTTONS ─────────────────
+    (function initRipple() {
+      document.addEventListener('click', e => {
+        const btn = e.target.closest('button, .btn, .pill, .login-btn');
+        if (!btn) return;
+        btn.classList.add('ripple-host');
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.4;
+        const span = document.createElement('span');
+        span.className = 'ripple';
+        span.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size/2}px;top:${e.clientY - rect.top - size/2}px`;
+        btn.appendChild(span);
+        setTimeout(() => span.remove(), 600);
+      });
+    })();
+
+    // ── 4. 3-D TILT ON CARDS ─────────────────
+    (function initTilt() {
+      const cards = document.querySelectorAll('.lg');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', e => {
+          const r = card.getBoundingClientRect();
+          const x = e.clientX - r.left - r.width  / 2;
+          const y = e.clientY - r.top  - r.height / 2;
+          const rotX = (-y / r.height * 7).toFixed(2);
+          const rotY = ( x / r.width  * 7).toFixed(2);
+          card.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(6px)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1), box-shadow 0.5s cubic-bezier(0.16,1,0.3,1)';
+          card.style.transform = '';
+          setTimeout(() => card.style.transition = '', 600);
+        });
+        card.addEventListener('mouseenter', () => {
+          card.style.transition = 'transform 0.12s ease, box-shadow 0.5s cubic-bezier(0.16,1,0.3,1)';
+        });
+      });
+    })();
+
+    // ── 5. MAGNETIC BUTTONS ───────────────────
+    (function initMagnetic() {
+      document.querySelectorAll('.btn, .login-btn').forEach(btn => {
+        btn.addEventListener('mousemove', e => {
+          const r = btn.getBoundingClientRect();
+          const dx = e.clientX - (r.left + r.width  / 2);
+          const dy = e.clientY - (r.top  + r.height / 2);
+          btn.style.transform = `translate(${dx * 0.18}px, ${dy * 0.18}px) scale(1.03)`;
+        });
+        btn.addEventListener('mouseleave', () => {
+          btn.style.transition = 'transform 0.5s cubic-bezier(0.16,1,0.3,1)';
+          btn.style.transform  = '';
+          setTimeout(() => btn.style.transition = '', 500);
+        });
+        btn.addEventListener('mouseenter', () => {
+          btn.style.transition = 'transform 0.1s ease';
+        });
+      });
+    })();
+
+    // ── 6. COUNT-UP NUMBERS (packet badge) ───
+    function animateCount(el, from, to, duration = 700) {
+      if (from === to) return;
+      const start = performance.now();
+      function frame(now) {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(from + (to - from) * eased);
+        if (t < 1) requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    }
+    // Expose so renderVehicles can call it
+    window.animateCount = animateCount;
+
+    // ── 7. TABLE ROW STAGGER ────────────────
+    const _origRenderVehicles = window.renderVehicles;
+    function patchRowAnimation() {
+      const tbody = document.getElementById('veh-table');
+      if (!tbody) return;
+      const observer = new MutationObserver(() => {
+        tbody.querySelectorAll('tr:not(.anim-row)').forEach((tr, i) => {
+          tr.classList.add('anim-row');
+          tr.style.animationDelay = (i * 45) + 'ms';
+        });
+      });
+      observer.observe(tbody, { childList: true });
+    }
+    patchRowAnimation();
+
+    // ── 8. LOGIN CARD PARALLAX ────────────────
+    (function initLoginParallax() {
+      const card = document.querySelector('.login-card');
+      if (!card) return;
+      document.addEventListener('mousemove', e => {
+        const ls = document.getElementById('login-screen');
+        if (!ls || ls.classList.contains('hidden')) return;
+        const cx = window.innerWidth  / 2;
+        const cy = window.innerHeight / 2;
+        const rx = ((e.clientY - cy) / cy * -8).toFixed(2);
+        const ry = ((e.clientX - cx) / cx *  8).toFixed(2);
+        card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+    })();
+
+    // ── 9. LIVE STATUS GLOW ───────────────────
+    const _origStatus = window.status || function(){};
+    window.status = function(text, state) {
+      _origStatus.call(this, text, state);
+      const dot = document.getElementById('dot');
+      if (!dot) return;
+      if (state === 'run')     { dot.style.boxShadow = '0 0 0 6px rgba(16,185,129,0.2), 0 0 20px rgba(16,185,129,0.3)'; }
+      else if (state === 'err'){ dot.style.boxShadow = '0 0 0 6px rgba(239,68,68,0.2),  0 0 20px rgba(239,68,68,0.3)'; }
+      else if (state === 'sending') { dot.style.boxShadow = '0 0 0 6px rgba(245,158,11,0.2), 0 0 20px rgba(245,158,11,0.3)'; }
+      else { dot.style.boxShadow = ''; }
+    };
+
+  </script>
+</body>
+
+</html>
