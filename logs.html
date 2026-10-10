@@ -484,8 +484,8 @@ tr:hover td { background: rgba(0,122,255,0.03); cursor: pointer; }
   <div class="orb orb3"></div>
 </div>
 
-<!-- Auth overlay (shown if not logged in) -->
-<div id="auth-overlay">
+<!-- Auth overlay (shown if not logged in on private server) -->
+<div id="auth-overlay" class="hidden">
   <div class="auth-msg lg lg-thick">
     <div style="font-size:48px;margin-bottom:16px;">🔒</div>
     <h2>Access Denied</h2>
@@ -495,7 +495,7 @@ tr:hover td { background: rgba(0,122,255,0.03); cursor: pointer; }
 </div>
 
 <!-- Topbar -->
-<nav class="topbar" id="main-topbar" style="display:none;">
+<nav class="topbar" id="main-topbar">
   <div class="topbar-logo">
     <div class="topbar-icon">📋</div>
     <h1>Transmission Logs</h1>
@@ -532,7 +532,7 @@ tr:hover td { background: rgba(0,122,255,0.03); cursor: pointer; }
 </nav>
 
 <!-- Main content -->
-<div class="app-body" id="main-content" style="display:none;">
+<div class="app-body" id="main-content">
 
   <!-- Stats -->
   <div class="stats-row">
@@ -634,17 +634,21 @@ let allLogs = [], filteredLogs = [], currentPage = 1;
 let autoRefreshTimer = null;
 const AUTO_REFRESH_INTERVAL = 15000;
 
-// ── Auth check ──
+// ── Auth & Initialization ──
 (async () => {
-  let isAuthed = (sessionStorage.getItem('uptcp_logged_in') === '1');
   const isStatic = location.hostname.includes('github.io') || location.protocol === 'file:' || location.hostname === '';
+  let isAuthed = (localStorage.getItem('uptcp_logged_in') === '1') || (sessionStorage.getItem('uptcp_logged_in') === '1');
   
-  if (!isStatic) {
+  // On static hosting (e.g. GitHub Pages) or if opened from client panel, always allow access
+  if (isStatic || isAuthed) {
+    isAuthed = true;
+    try { localStorage.setItem('uptcp_logged_in', '1'); } catch(_) {}
+  } else {
     try {
       const res = await fetch('send.php?action=check_auth');
       if (res.ok) {
         const d = await res.json();
-        if (d.ok) isAuthed = true;
+        if (d && d.ok) isAuthed = true;
       }
     } catch(_) {}
   }
@@ -655,6 +659,10 @@ const AUTO_REFRESH_INTERVAL = 15000;
     document.getElementById('main-content').style.display = 'block';
     await loadLogs();
     startAutoRefresh();
+  } else {
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    document.getElementById('main-topbar').style.display = 'none';
+    document.getElementById('main-content').style.display = 'none';
   }
 })();
 
@@ -742,20 +750,23 @@ async function loadLogs(showSpinner = false) {
 
   let loaded = false;
   let remoteLogs = [];
+  const isStatic = location.hostname.includes('github.io') || location.protocol === 'file:' || location.hostname === '';
 
   // Try local send.php first (if on PHP webhost / localhost)
-  try {
-    const res = await fetch('send.php?action=logs', { cache: 'no-store' });
-    if (res.ok) {
-      const d = await res.json();
-      if (d.ok && Array.isArray(d.logs)) {
-        remoteLogs = d.logs;
-        loaded = true;
+  if (!isStatic) {
+    try {
+      const res = await fetch('send.php?action=logs', { cache: 'no-store' });
+      if (res.ok) {
+        const d = await res.json();
+        if (d.ok && Array.isArray(d.logs)) {
+          remoteLogs = d.logs;
+          loaded = true;
+        }
       }
-    }
-  } catch(_) {}
+    } catch(_) {}
+  }
 
-  // Fallback to central admin server logs
+  // Fetch from central admin server logs
   if (!loaded || remoteLogs.length === 0) {
     try {
       const resAdminAll = await fetch('https://orbitgps.in/tcp/admin_server.php?action=client_logs', { cache: 'no-store' });

@@ -1631,6 +1631,7 @@
     /* ─────────── AUTH UI ─────────── */
     function showLogin() {
       sessionStorage.removeItem('uptcp_logged_in');
+      try { localStorage.removeItem('uptcp_logged_in'); } catch(_) {}
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('main-app').classList.remove('visible');
       const logsBtn = document.getElementById('logs-btn');
@@ -1639,6 +1640,7 @@
     }
     async function showApp(isAdmin = false) {
       sessionStorage.setItem('uptcp_logged_in', '1');
+      try { localStorage.setItem('uptcp_logged_in', '1'); } catch(_) {}
       const isMaint = await applyMaintenanceMode();
       if (isMaint) return;
 
@@ -1696,6 +1698,7 @@
           const adminAuthData = await adminAuthRes.json();
           if (adminAuthData && adminAuthData.ok) {
             sessionStorage.setItem('uptcp_logged_in', '1');
+            try { localStorage.setItem('uptcp_logged_in', '1'); } catch(_) {}
             sessionStorage.setItem('uptcp_username', u);
             document.getElementById('kicked-banner').style.display = 'none';
             await showApp(!!adminAuthData.is_admin);
@@ -1752,7 +1755,8 @@
           const res = await apiCall('send.php?action=check_auth');
           if (!res || !res.ok) {
             const isStatic = location.hostname.includes('github.io') || location.protocol === 'file:' || location.hostname === '';
-            if (!isStatic && sessionStorage.getItem('uptcp_logged_in') !== '1') {
+            const isLogged = (sessionStorage.getItem('uptcp_logged_in') === '1') || (localStorage.getItem('uptcp_logged_in') === '1');
+            if (!isStatic && !isLogged) {
               stopRunning(); 
               document.getElementById('kicked-banner').style.display = 'block'; 
               showLogin(); 
@@ -1778,7 +1782,7 @@
       const isMaint = await applyMaintenanceMode();
       if (isMaint) return;
 
-      let isAuthed = (sessionStorage.getItem('uptcp_logged_in') === '1');
+      let isAuthed = (sessionStorage.getItem('uptcp_logged_in') === '1') || (localStorage.getItem('uptcp_logged_in') === '1');
       let isAdmin = false;
 
       try {
