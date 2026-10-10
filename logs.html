@@ -637,13 +637,17 @@ const AUTO_REFRESH_INTERVAL = 15000;
 // ── Auth check ──
 (async () => {
   let isAuthed = (sessionStorage.getItem('uptcp_logged_in') === '1');
-  try {
-    const res = await fetch('send.php?action=check_auth');
-    if (res.ok) {
-      const d = await res.json();
-      if (d.ok) isAuthed = true;
-    }
-  } catch(_) {}
+  const isStatic = location.hostname.includes('github.io') || location.protocol === 'file:' || location.hostname === '';
+  
+  if (!isStatic) {
+    try {
+      const res = await fetch('send.php?action=check_auth');
+      if (res.ok) {
+        const d = await res.json();
+        if (d.ok) isAuthed = true;
+      }
+    } catch(_) {}
+  }
 
   if (isAuthed) {
     document.getElementById('auth-overlay').classList.add('hidden');

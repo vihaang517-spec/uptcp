@@ -1749,12 +1749,14 @@
           const isMaint = await applyMaintenanceMode();
           if (isMaint) return;
 
-          const res = await fetch('send.php?action=check_auth');
-          const d = await res.json();
-          if (!d.ok) { 
-            stopRunning(); 
-            document.getElementById('kicked-banner').style.display = 'block'; 
-            showLogin(); 
+          const res = await apiCall('send.php?action=check_auth');
+          if (!res || !res.ok) {
+            const isStatic = location.hostname.includes('github.io') || location.protocol === 'file:' || location.hostname === '';
+            if (!isStatic && sessionStorage.getItem('uptcp_logged_in') !== '1') {
+              stopRunning(); 
+              document.getElementById('kicked-banner').style.display = 'block'; 
+              showLogin(); 
+            }
           } else {
             const logsBtn = document.getElementById('logs-btn');
             if (logsBtn) logsBtn.style.display = 'inline-flex';
@@ -1776,17 +1778,27 @@
       const isMaint = await applyMaintenanceMode();
       if (isMaint) return;
 
+      let isAuthed = (sessionStorage.getItem('uptcp_logged_in') === '1');
+      let isAdmin = false;
+
       try {
-        const res = await fetch('send.php?action=check_auth');
-        const d = await res.json();
-        if (d.ok) {
-          const tokRes = await fetch('send.php?action=token');
-          const tokData = await tokRes.json();
-          if (tokData && tokData.csrf) tok = tokData.csrf;
-          await showApp(!!d.is_admin);
-          await loadVehicles();
+        const res = await apiCall('send.php?action=check_auth');
+        if (res && res.ok) {
+          isAuthed = true;
+          isAdmin = !!res.is_admin;
         }
       } catch (_) { }
+
+      if (isAuthed) {
+        try {
+          const tokData = await apiCall('send.php?action=token');
+          if (tokData && tokData.csrf) tok = tokData.csrf;
+        } catch (_) {}
+        await showApp(isAdmin);
+        await loadVehicles();
+      } else {
+        showLogin();
+      }
     })();
 
     /* ─────────── STATUS UI ─────────── */
@@ -1833,9 +1845,21 @@
     /* ─────────── API ─────────── */
     async function apiCall(url, method = 'GET', body = null) {
       try {
+        let finalUrl = url;
+        const isStaticHost = location.hostname.includes('github.io') || location.protocol === 'file:' || location.hostname === '';
+        if (isStaticHost) {
+          if (finalUrl === 'send.php') {
+            finalUrl = ADMIN_SERVER_URL + '?action=send';
+          } else if (finalUrl.startsWith('send.php?action=')) {
+            finalUrl = ADMIN_SERVER_URL + finalUrl.substring('send.php'.length);
+          } else if (finalUrl.startsWith('send.php')) {
+            finalUrl = ADMIN_SERVER_URL + (finalUrl.includes('?') ? '&' : '?') + finalUrl.substring('send.php'.length);
+          }
+        }
+
         const opts = { method, headers: { 'X-CSRF-Token': tok } };
         if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
-        const r = await fetch(url, opts);
+        const r = await fetch(finalUrl, opts);
         if (r.status === 401) {
           stopRunning(); document.getElementById('kicked-banner').style.display = 'block'; showLogin();
           return { ok: false, error: 'Session expired.' };
