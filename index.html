@@ -1977,14 +1977,36 @@
       q('#pkt').textContent = packet;
       status(`Sending packet for IMEI ${v.imei}…`, 'sending');
 
-      const j = await apiCall('send.php', 'POST', {
-        ip, port, packet,
-        imei: v.imei,
-        vehicle_id: v.id,
-        append_crlf: false,
-        wait_reply: true,
-        timeout: 5
-      });
+      if (!window.tcpCallback) {
+        window.tcpCallbacks = {};
+        window.tcpCallback = function(id, jsonStr) {
+            if (window.tcpCallbacks[id]) {
+                window.tcpCallbacks[id](JSON.parse(jsonStr));
+                delete window.tcpCallbacks[id];
+            }
+        };
+      }
+
+      let j;
+      if (window.AndroidTCP) {
+          j = await new Promise((resolve) => {
+              const cbId = 'cb_' + Date.now() + Math.random();
+              window.tcpCallbacks[cbId] = resolve;
+              window.AndroidTCP.sendPacket(ip, port, packet, false, 5000, cbId);
+          });
+          // Mock latency for local packet
+          j.sent_bytes = packet.length;
+          j.latency_ms = 15;
+      } else {
+          j = await apiCall('send.php', 'POST', {
+            ip, port, packet,
+            imei: v.imei,
+            vehicle_id: v.id,
+            append_crlf: false,
+            wait_reply: true,
+            timeout: 5
+          });
+      }
 
       if (j && j.ok) {
         sentTotal++;
